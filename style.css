@@ -1,0 +1,55 @@
+let cardHistory = JSON.parse(localStorage.getItem('cardHistory') || '[]');
+
+function updateDashboard() {
+  const totalCards = cardHistory.length;
+  const totalValue = cardHistory.reduce((sum, c) => sum + parseFloat(c.value), 0);
+  const totalTrades = cardHistory.filter(c => c.status === "Success").length;
+
+  document.getElementById('totalCards').querySelector('.dash-value').textContent = totalCards;
+  document.getElementById('totalValue').querySelector('.dash-value').textContent = `$${totalValue.toFixed(2)}`;
+  document.getElementById('totalTrades').querySelector('.dash-value').textContent = totalTrades;
+}
+
+function updateTable() {
+  const tableBody = document.getElementById('cardTable');
+  tableBody.innerHTML = "";
+
+  cardHistory.forEach(tx => {
+    const row = document.createElement('tr');
+    row.className = tx.option; // Apply card type color
+    row.innerHTML = `<td>${tx.number}</td><td>$${tx.value}</td><td>${tx.option.toUpperCase()}</td><td class="${tx.status === 'Success' ? 'success' : 'fail'}">${tx.status}</td>`;
+    tableBody.appendChild(row);
+  });
+}
+
+function tradeCard() {
+  const card = document.getElementById('cardNumber').value.trim();
+  const value = parseFloat(document.getElementById('cardValue').value);
+  const option = document.getElementById('tradeOption').value;
+  const resultDiv = document.getElementById('result');
+
+  if (!card || !value || value <= 0) {
+    resultDiv.className = "result fail";
+    resultDiv.textContent = "Enter a valid card number and value.";
+    return;
+  }
+
+  const success = Math.random() <= 0.85;
+  const statusText = success ? "Success" : "Failed";
+
+  resultDiv.className = `result ${success ? 'success' : 'fail'}`;
+  resultDiv.textContent = success
+    ? `Trade successful! $${value.toFixed(2)} card traded for ${option.toUpperCase()}.`
+    : "Trade failed. Try again.";
+
+  cardHistory.push({ number: card, value: value.toFixed(2), option: option, status: statusText });
+  localStorage.setItem('cardHistory', JSON.stringify(cardHistory));
+
+  updateTable();
+  updateDashboard();
+}
+
+// Initialize
+updateTable();
+updateDashboard();
+document.getElementById('tradeButton').addEventListener('click', tradeCard);
